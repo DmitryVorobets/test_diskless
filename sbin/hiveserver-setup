@@ -123,6 +123,7 @@ if [[ ! -d /hiveserver/sbin ]]; then
 fi
 ##############
 
+clear
 want="y"
 echo -en "Do you want create server config? (Y/n)"
 read want
