@@ -4,6 +4,7 @@ echo "Installation the Hive OS server"
 echo
 [[ $(id -u) -ne 0 ]] && echo "Please run this as root or with sudo. Exit" && exit 1 ##Check root privilegies
 
+DISTR_URL="https://github.com/lexandr0s/test_diskless/archive/master.zip"
 SERVER_CONF="/hiveserver/serv.conf"
 HIVE_IMAGE_DIR="/hiveserver/image"
 HIVE_ROOT="/hiveserver/root"
@@ -100,7 +101,7 @@ function unify {
 }
 
 if [[ ! -d /hiveserver/sbin ]]; then
-	wget -t 5 --show-progress https://github.com/lexandr0s/test_diskless/archive/master.zip
+	wget -t 5 --show-progress $DISTR_URL
 	[[ $? -ne 0 ]] && exit 1
 	unzip master.zip
 	mkdir -p $HIVE_IMAGE_DIR
