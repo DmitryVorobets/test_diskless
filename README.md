@@ -40,7 +40,7 @@
  ## Установка сервера
  
  ```
-cd /tmp && wget https://raw.githubusercontent.com/lexandr0s/test_diskless/master/sbin/hiveserver-setup && sudo sh hiveserver-setup
+cd /tmp && wget https://raw.githubusercontent.com/lexandr0s/test_diskless/master/sbin/hiveserver-setup && sudo bash hiveserver-setup
  ```
  
 ## Загрузка бездисковых ригов
