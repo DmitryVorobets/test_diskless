@@ -132,7 +132,7 @@ if [[ -z $want ]]; then
 else
 	want=${unify $want}
 fi
-if [[ $want == "y" ]];
+if [[ $want == "y" ]]; then
 	config
 	echo "Create Server config success"
 fi
