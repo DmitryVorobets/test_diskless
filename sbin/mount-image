@@ -32,10 +32,20 @@ fi
 
 ## Check conf dir and copy it from image if config not found
 [[ ! -d $HIVE_CONFDIR ]] && echo "Create hive-conf directory" && mkdir $HIVE_CONFDIR
-if [[ -s $HIVE_CONFDIR/rig.conf ]]; then
+if [[ -f $HIVE_CONFDIR/rig.conf ]]; then
 	echo "$HIVE_CONFDIR/rig.conf found"
 else
 	cp -R $HIVE_DIR/hive/etc/hive-config.stub/* $HIVE_CONFDIR/
+fi
+
+[[ ! -f $HIVE_CONFDIR/rig.conf ]] && cp $HIVE_CONFDIR/rig-config-example.txt $HIVE_CONFDIR/rig.conf
+
+source $HIVE_CONFDIR/rig.conf
+
+if [[ -z $FARM_HASH ]]; then
+	[[ ! -f $SERVER_CONF ]] && echo "$SERVER_CONF not found. Exit" && exit 1
+	source $SERVER_CONF
+	echo "FARM_HASH=$FARM_HASH" >> $HIVE_CONFDIR/rig.conf
 fi
 
 if [[ ! -f $HIVE_TFTP/vmlinuz ]]; then

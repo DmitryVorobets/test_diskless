@@ -4,7 +4,6 @@ echo "Installation the Hive OS server"
 echo
 [[ $(id -u) -ne 0 ]] && echo "Please run this as root or with sudo. Exit" && exit 1 ##Check root privilegies
 
-DISTR_URL="https://github.com/lexandr0s/test_diskless/archive/master.zip"
 SERVER_CONF="/hiveserver/serv.conf"
 HIVE_IMAGE_DIR="/hiveserver/image"
 HIVE_ROOT="/hiveserver/root"
@@ -49,8 +48,11 @@ function config {
 		echo -en "Type the DNS-server address (example: 1.1.1.1): "
 		read dns
 		echo
-		echo -en "Type the DHCP-range for you subnet (example: 192.168.1.10,192.168.1.50): "
+		echo -en "Type the DHCP-range for you subnet (example: 192.168.1.10,192.168.1.50, or empty for no-DHCP): "
 		read range
+		echo
+		echo -en "Type you Farm Hash (from web): "
+		read hash
 		clear
 		echo "Carefully check your network settings."
 		echo "If these values are incorrect, your server will not work correctly."
@@ -62,6 +64,7 @@ function config {
 		echo "Gateway IP-address: $gtw"
 		echo "DNS-server IP-address: $dns"
 		echo "DHCP-range for you subnet: $range"
+		echo "Farm Hash: $hash"
 		echo 
 		echo -e "Type \"yes\" if all correct or any for setup values again"
 		echo -en "All values correct? :"
@@ -76,6 +79,7 @@ function config {
 		echo "BROADCAST=$brc" >> $SERVER_CONF
 		echo "DNS=$dns" >> $SERVER_CONF
 		echo "DHCP_RANGE=$range" >> $SERVER_CONF
+		echo "FARM_HASH=$hash" >> $SERVER_CONF
 	done
 	return 0
 }
@@ -101,7 +105,7 @@ function unify {
 }
 
 if [[ ! -d /hiveserver/sbin ]]; then
-	wget -t 5 --show-progress $DISTR_URL
+	wget -t 5 --show-progress https://github.com/lexandr0s/test_diskless/archive/master.zip
 	[[ $? -ne 0 ]] && exit 1
 	unzip master.zip
 	mkdir -p $HIVE_IMAGE_DIR
@@ -202,14 +206,6 @@ echo "menu end" >> $HIVE_TFTP/menu.cfg
 echo "/hiveserver/sbin/start" > /etc/rc.local
 echo "exit 0" >> /etc/rc.local
 
-##Configure rigs
-/hiveserver/sbin/mount-image
-[[ $? -ne 0 ]] && exit 1
-echo -en "Type you Farm Hash (from web): "
-read hash
-echo "HIVE_HOST_URL=\"https://api.hiveos.farm\"" > $HIVE_CONFDIR/rig.conf
-echo "FARM_HASH=$hash" >> $HIVE_CONFDIR/rig.conf
-
 echo
 echo "Congratulations! All the installation steps are completed successfully."
 echo "We recommend reboot you server for correct apply installation"
@@ -226,3 +222,16 @@ fi
 [[ $want == "y" ]] && reboot
 
 exit 0
+
+
+
+
+
+
+
+
+
+
+
+
+
