@@ -24,9 +24,7 @@ function install {
 	[[ $? -ne 0 ]] && return 1
 	apt -y dist-upgrade
 	[[ $? -ne 0 ]] && return 1
-	apt install -y nfs-kernel-server
-	[[ $? -ne 0 ]] && return 1
-	apt install -y dnsmasq
+	apt install -y nfs-kernel-server dnsmasq unzip curl
 	[[ $? -ne 0 ]] && return 1
 	return 0
 }
@@ -111,6 +109,7 @@ function unify {
 
 
 ##Download and install server components
+install
 if [[ ! -d /hiveserver/sbin ]]; then
 	wget -t 5 --show-progress $DISTR_URL
 	[[ $? -ne 0 ]] && exit 1
@@ -133,20 +132,6 @@ fi
 if [[ $want == "y" ]];
 	config
 	echo "Create Server config success"
-fi
-
-want=""
-echo -en  "Do you want install system components? (Y/n)"
-read want
-if [[ -z $want ]]; then
-	want="y"
-else
-	want=${unify $want}
-fi
-if [[ $want == "y" ]]; then
-	install
-	[[ $? -ne 0 ]] && echo "Error install system components. Exit" && exit 1
-	echo "Install system components success"
 fi
 
 want=""
