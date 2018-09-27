@@ -26,7 +26,7 @@ function install {
 	[[ $? -ne 0 ]] && return 1
 	apt -y autoclean
 	[[ $? -ne 0 ]] && return 1
-	apt install -y nfs-kernel-server dnsmasq unzip curl
+	apt install -y nfs-kernel-server dnsmasq unzip curl dos2unix
 	[[ $? -ne 0 ]] && return 1
 	return 0
 }

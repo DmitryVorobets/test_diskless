@@ -40,6 +40,7 @@ fi
 
 [[ ! -f $HIVE_CONFDIR/rig.conf ]] && cp $HIVE_CONFDIR/rig-config-example.txt $HIVE_CONFDIR/rig.conf
 
+dos2unix $HIVE_CONFDIR/rig.conf
 source $HIVE_CONFDIR/rig.conf
 
 if [[ -z $FARM_HASH ]]; then
