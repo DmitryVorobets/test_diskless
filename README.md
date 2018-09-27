@@ -40,7 +40,7 @@
  ## Установка сервера
  
  ```
-cd /tmp && curl -L --insecure -s -O https://raw.githubusercontent.com/lexandr0s/test_diskless/master/sbin/hiveserver-setup && sh hiveserver-setup
+cd /tmp && curl -L --insecure -s -O https://raw.githubusercontent.com/lexandr0s/test_diskless/master/sbin/hiveserver-setup && sudo sh hiveserver-setup
  ```
  
 ## Загрузка бездисковых ригов
