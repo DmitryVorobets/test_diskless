@@ -38,7 +38,7 @@
  ## Установка сервера
  
  ```
- запуск скрипта
+cd /tmp && curl -L --insecure -s -O https://raw.githubusercontent.com/lexandr0s/test_diskless/master/sbin/hiveserver-setup && sh hiveserver-setup
  ```
  
 ## Загрузка бездисковых ригов
