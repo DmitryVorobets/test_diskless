@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+cat /proc/mounts | grep -q hiveserver
+[[ $? -ne 0 ]] && exec /hive/sbin/netpre
+
+echo "Diskless rig. Skip"
+exit 0
+
+
+

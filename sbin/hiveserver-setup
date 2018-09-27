@@ -1,0 +1,220 @@
+#!/bin/bash
+#Setup Hive server
+echo "Installation the Hive OS server"
+echo
+[[ $(id -u) -ne 0 ]] && echo "Please run this as root or with sudo. Exit" && exit 1 ##Check root privilegies
+
+SERVER_CONF="/hiveserver/serv.conf"
+HIVE_IMAGE_DIR="/hiveserver/image123"
+HIVE_ROOT="/hiveserver/root"
+HIVE_FAKEROOT="/hiveserver/fakeroot"
+HIVE_SBIN="/hiveserver/sbin"
+HIVE_TFTP="/hiveserver/tftp"
+HIVE_URL="http://download.hiveos.farm/hive-0.5-76-20180924.zip"
+HIVE_ZIP="hive-0.5-76-20180924.zip"
+HIVE_MD5="0848639740c8696f2df796623a270de4"
+
+
+function install {
+	apt update
+	[[ $? -ne 0 ]] && return 1
+	apt -y dist-upgrade
+	[[ $? -ne 0 ]] && return 1
+	apt install -y nfs-kernel-server
+	[[ $? -ne 0 ]] && return 1
+	apt install -y dnsmasq
+	[[ $? -ne 0 ]] && return 1
+	return 0
+}
+
+function config {
+	while [[ $answ != "yes" ]]
+	do
+		clear
+		echo -en "Type the server IP-address (example: 192.168.1.1): "
+		read ipaddr
+		echo
+		echo -en "Type the subnet net-mask (example: 255.255.255.0): "
+		read mask
+		echo
+		echo -en "Type the gateway IP-address (example: 192.168.1.100): "
+		read gtw
+		echo
+		echo -en "Type the Broadcast address (example: 192.168.1.255): "
+		read brc
+		echo
+		echo -en "Type the DNS-server address (example: 1.1.1.1): "
+		read dns
+		echo
+		echo -en "Type the DHCP-range for you subnet (example: 192.168.1.10,192.168.1.50): "
+		read range
+		clear
+		echo "Carefully check your network settings."
+		echo "If these values are incorrect, your server will not work correctly."
+		echo "And your rigs will not be able to boot."
+		echo
+		echo "Server IP-address: $ipaddr"
+		echo "Subnet net-mask: $mask"
+		echo "Broadcast address: $brc"
+		echo "Gateway IP-address: $gtw"
+		echo "DNS-server IP-address: $dns"
+		echo "DHCP-range for you subnet: $range"
+		echo 
+		echo -e "Type \"yes\" if all correct or any for setup values again"
+		echo -en "All values correct? :"
+		read answ
+		[[ $answ != "yes" ]] && continue
+
+		#Create server config
+		echo "SERVER_IPADDR=$ipaddr" > $SERVER_CONF
+		echo "SERVER_HOSTNAME=\"hiveserver.loc\"" >> $SERVER_CONF
+		echo "NETMASK=$mask" >> $SERVER_CONF
+		echo "ROUTER=$gtw" >> $SERVER_CONF
+		echo "BROADCAST=$brc" >> $SERVER_CONF
+		echo "DNS=$dns" >> $SERVER_CONF
+		echo "DHCP_RANGE=$range" >> $SERVER_CONF
+	done
+	return 0
+}
+
+
+function download {
+	rm -f $HIVE_IMAGE_DIR/*
+	wget -P $HIVE_IMAGE_DIR -t 5 --show-progress http://download.hiveos.farm/$HIVE_ZIP
+	[[ $? -ne 0 ]] && return 1
+	echo "$HIVE_MD5 $HIVE_IMAGE_DIR/$HIVE_ZIP" > md5.txt
+	echo "Check MD5 summ of image file"
+	md5sum --quiet -c md5.txt
+	[[ $? -ne 0 ]] && return 1
+	rm md5.txt
+	return 0
+}
+
+function unify {
+	#Unify the answer
+	u=${$1,}
+	u=${$u:0:1}
+	echo $u
+}
+
+want="y"
+echo -en "Do you want create server config? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=${unify $want}
+fi
+if [[ $want == "y" ]];
+	config
+	echo "Create Server config success"
+fi
+
+want=""
+echo -en  "Do you want install system components? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=${unify $want}
+fi
+if [[ $want == "y" ]]; then
+	install
+	[[ $? -ne 0 ]] && echo "Error install system components. Exit" && exit 1
+	echo "Install system components success"
+fi
+
+want=""
+echo -en  "Do you want download and install Hive OS image? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=${unify $want}
+fi
+if [[ $want == "y" ]]; then
+	download
+	[[ $? -ne 0 ]] && echo "Error install Hive OS image. Exit" && exit 1
+	echo "Download and install Hive OS image success."
+fi
+
+
+[[ ! -f $SERVER_CONF ]] && echo "Error! $SERVER_CONF not found. Exit" && exit 1
+source $SERVER_CONF
+
+
+#Configure dnsmasq and NFS-server
+want=""
+echo -en  "Do you want to use this server as DHCP-server? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=${unify $want}
+fi
+if [[ $want == "y" ]]; then
+	echo "port=0" > /etc/dnsmasq.conf
+	echo "dhcp-range=$DHCP_RANGE,$NETMASK" >> /etc/dnsmasq.conf
+	echo "dhcp-broadcast=$BROADCAST" >> /etc/dnsmasq.conf
+	echo "dhcp-option=option:dns-server,$DNS"  >> /etc/dnsmasq.conf
+	echo "dhcp-option=option:router,$ROUTER"  >> /etc/dnsmasq.conf
+	echo "dhcp-boot=/pxelinux.0"  >> /etc/dnsmasq.conf
+	echo "enable-tftp"  >> /etc/dnsmasq.conf
+	echo "tftp-root=$HIVE_TFTP"  >> /etc/dnsmasq.conf
+else
+	echo "port=0" > /etc/dnsmasq.conf
+	echo "enable-tftp"  >> /etc/dnsmasq.conf
+	echo "tftp-root=$HIVE_TFTP"  >> /etc/dnsmasq.conf
+fi
+
+###########
+##Export nfs shares
+echo "/hiveserver/root *(ro,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" > /etc/exports
+echo "/hiveserver/rigsfs *(rw,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" >> /etc/exports
+##
+
+###Create boot menu
+echo "menu hshift 13" > $HIVE_TFTP/menu.cfg
+echo "menu width 49" >> $HIVE_TFTP/menu.cfg
+echo "menu margin 8" >> $HIVE_TFTP/menu.cfg
+echo "menu tabmsg" >> $HIVE_TFTP/menu.cfg
+echo "" >> $HIVE_TFTP/menu.cfg
+echo "menu title HIVE OS" >> $HIVE_TFTP/menu.cfg
+echo "label HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
+echo "   menu label ^HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
+echo "   kernel vmlinuz" >> $HIVE_TFTP/menu.cfg
+echo "   append vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/root ro intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$" >> $HIVE_TFTP/menu.cfg
+echo "menu end" >> $HIVE_TFTP/menu.cfg
+
+echo "/hiveserver/sbin/start" > /etc/rc.local
+echo "exit 0" >> /etc/rc.local
+
+echo
+echo "Congratulations! All the installation steps are completed successfully."
+echo "We recommend reboot you server for correct apply installation"
+echo "After rebooting, your server will be ready to work."
+echo "And you can boot your diskless rigs."
+want=""
+echo -en  "Do you want reboot you server now? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=${unify $want}
+fi
+[[ $want == "y" ]] && reboot
+
+exit 0
+
+
+
+
+
+
+
+
+
+
+
+
+

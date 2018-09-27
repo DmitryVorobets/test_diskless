@@ -1,0 +1,49 @@
+#!/bin/bash
+#Mount points to fakefs
+
+SERVER_CONF="/hiveserver/serv.conf"
+HIVE_ROOT="/hiveserver/root"
+HIVE_FAKEROOT="/hiveserver/fakeroot"
+HIVE_CONFDIR="/hiveserver/hive-config"
+
+case "$1" in
+  mount)
+	exportfs -ra
+	mount --bind $HIVE_FAKEROOT/etc/init.d $HIVE_ROOT/etc/init.d
+	mount --bind $HIVE_FAKEROOT/etc/rcS.d $HIVE_ROOT/etc/rcS.d
+	mount --bind $HIVE_FAKEROOT/etc/fstab $HIVE_ROOT/etc/fstab
+	mount --bind $HIVE_FAKEROOT/etc/hosts $HIVE_ROOT/etc/hosts
+	mount --bind $HIVE_FAKEROOT/etc/apt/apt.conf.d $HIVE_ROOT/etc/apt/apt.conf.d
+	mount --bind $HIVE_FAKEROOT/lib/systemd/system/systemd-networkd.service $HIVE_ROOT/lib/systemd/system/systemd-networkd.service
+	mount --bind $HIVE_FAKEROOT/lib/systemd/system/systemd-timesyncd.service $HIVE_ROOT/lib/systemd/system/systemd-timesyncd.service
+	mount --bind $HIVE_FAKEROOT/lib/systemd/system/systemd-resolved.service $HIVE_ROOT/lib/systemd/system/systemd-resolved.service
+	mount --bind $HIVE_FAKEROOT/hive/sbin $HIVE_ROOT/hive/sbin
+	mount --bind $HIVE_FAKEROOT/hive/etc/hive-netpre.service $HIVE_ROOT/hive/etc/hive-netpre.service
+	mount --bind $HIVE_FAKEROOT/hive/etc/hive.service $HIVE_ROOT/hive/etc/hive.service
+	mount --bind $HIVE_CONFDIR $HIVE_ROOT/hive-config
+	exit $?
+	;;
+  umount)
+	exportfs -u *:/hiveserver/root
+	umount $HIVE_ROOT/etc/init.d
+	umount $HIVE_ROOT/etc/rcS.d
+	umount $HIVE_ROOT/etc/fstab
+	umount $HIVE_ROOT/etc/hosts
+	umount $HIVE_ROOT/lib/systemd/system/systemd-networkd.service
+	umount $HIVE_ROOT/lib/systemd/system/systemd-timesyncd.service
+	umount $HIVE_ROOT/lib/systemd/system/systemd-resolved.service
+	umount $HIVE_ROOT/etc/apt/apt.conf.d
+	umount $HIVE_ROOT/hive/sbin
+	umount $HIVE_ROOT/hive/etc/hive-netpre.service
+	umount $HIVE_ROOT/hive/etc/hive.service
+	umount $HIVE_ROOT/hive-config
+	exportfs -ra
+	exit $?
+	;;
+  *)
+	echo "Usage: mount-fakefs [mount|umount]" >&2
+	exit 3
+	;;
+esac
+
+
