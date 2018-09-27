@@ -181,6 +181,8 @@ else
 	echo "tftp-root=$HIVE_TFTP"  >> /etc/dnsmasq.conf
 fi
 
+echo "DNSMASQ_EXCEPT=lo" >> /etc/default/dnsmasq
+
 ###########
 ##Export nfs shares
 echo "/hiveserver/root *(ro,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" > /etc/exports
