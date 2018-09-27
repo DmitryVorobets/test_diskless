@@ -199,7 +199,7 @@ echo "menu title HIVE OS" >> $HIVE_TFTP/menu.cfg
 echo "label HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
 echo "   menu label ^HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
 echo "   kernel vmlinuz" >> $HIVE_TFTP/menu.cfg
-echo "   append vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/root ro intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$" >> $HIVE_TFTP/menu.cfg
+echo "   append vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/root ro consoleblank=0 text intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$" >> $HIVE_TFTP/menu.cfg
 echo "menu end" >> $HIVE_TFTP/menu.cfg
 
 echo "#!/bin/bash" > /etc/rc.local
