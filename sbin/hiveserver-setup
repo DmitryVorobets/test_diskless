@@ -105,8 +105,9 @@ function download {
 
 function unify {
 	#Unify the answer
-	u=${$1,}
-	u=${$u:0:1}
+	u=$1
+	u=${u,}
+	u=${u:0:1}
 	echo $u
 }
 
@@ -131,7 +132,7 @@ read want
 if [[ -z $want ]]; then
 	want="y"
 else
-	want=${unify $want}
+	want=$(unify $want)
 fi
 if [[ $want == "y" ]]; then
 	config
@@ -144,7 +145,7 @@ read want
 if [[ -z $want ]]; then
 	want="y"
 else
-	want=${unify $want}
+	want=$(unify $want)
 fi
 if [[ $want == "y" ]]; then
 	download
@@ -164,7 +165,7 @@ read want
 if [[ -z $want ]]; then
 	want="y"
 else
-	want=${unify $want}
+	want=$(unify $want)
 fi
 if [[ $want == "y" ]]; then
 	echo "port=0" > /etc/dnsmasq.conf
@@ -217,7 +218,7 @@ read want
 if [[ -z $want ]]; then
 	want="y"
 else
-	want=${unify $want}
+	want=$(unify $want)
 fi
 [[ $want == "y" ]] && reboot
 
