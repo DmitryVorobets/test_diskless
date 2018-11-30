@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#Prepare FS for diskless rig
+source /etc/environment
+
+cat /proc/mounts | grep -q hiveserver
+[[ $? -ne 0 ]] && exec /hive/bin/hive
+
+export PATH
+
+#[ -t 1 ] &&
+. colors #use them anyway
+
+function echo2 {
+	echo -e "$1" > /dev/tty1
+	echo -e "$1"
+}
+
+echo2 "${YELLOW}Diskless rig detected${NOCOLOR}"
+echo2 "${YELLOW}Hive prepares R/W Network File System${NOCOLOR}"
+echo2 "${YELLOW}Please, wait. This may take a few minutes.${NOCOLOR}"
+
+
+
+[[ ! -d /mnt/hiveramfs/rig ]] && mkdir -p /mnt/hiveramfs/rig
+mount -t nfs hiveserver.loc:/hiveserver/rigsfs /mnt/hiveramfs/rig
+[[ $? -ne 0 ]] && echo2 "${RED}Error mount NFS share. Contact HIVE server admin${NOCOLOR}"
+
+#Create nfs rig dirs and mount them
+uid=$(echo $(sudo dmidecode -t 4 | grep ID | sed 's/.*ID://;s/ //g')-$(cat /sys/class/net/eth0/address | sed 's/://g') | tr '[:upper:]' '[:lower:]') #| sha1sum | awk '{print $1}'
+rig_virtdir="/mnt/hiveramfs/rig/$uid"
+
+[[ ! -d $rig_virtdir ]] && mkdir -p $rig_virtdir
+if [[ ! -d $rig_virtdir/hive-config ]]; then
+	cp -R /hive-config $rig_virtdir
+fi
+
+if [[ ! -d $rig_virtdir/home/user ]]; then
+	mkdir -p $rig_virtdir/home/user
+	cp -R /home/user $rig_virtdir/home
+	
+fi
+
+if [[ ! -d $rig_virtdir/root ]]; then
+	cp -R /root $rig_virtdir
+fi
+
+if [[ ! -d $rig_virtdir/hive ]]; then
+	cp -R /hive $rig_virtdir/hive
+fi
+
+killall screen #Kill background hive processes to prevent unexpected effects
+mount --bind $rig_virtdir/hive-config /hive-config
+mount --bind $rig_virtdir/home/user /home/user
+chown -R user:user /home/user $rig_virtdir/home
+mount --bind $rig_virtdir/root /root
+mount --bind $rig_virtdir/hive /hive
+echo "exit 0 #Diskless rig. Upgrade not allowed" > /hive/bin/selfupgrade
+
+echo2
+echo2 "${GREEN}Preparation completed successfully.${NOCOLOR}"
+echo2 "${GREEN}Starting HIVE OS${NOCOLOR}"
+
+exec /hive/bin/hive
+
+

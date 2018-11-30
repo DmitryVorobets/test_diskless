@@ -1,0 +1,6 @@
+tmpfs /tmp tmpfs defaults,noatime,size=100M,mode=1777 0 0
+tmpfs /var/tmp tmpfs defaults,noatime,mode=1777 0 0
+tmpfs /var/log tmpfs defaults,noatime,mode=0755 0 0
+tmpfs /var/log/apt tmpfs defaults,noatime 0 0
+tmpfs /var/log/journal tmpfs defaults,noatime 0 0
+UUID=91D5-982B	/boot/efi	vfat	defaults	0	1

@@ -1,0 +1,70 @@
+#!/bin/bash
+#Create init.rd provider for prepare Hive FS
+
+SERVER_CONF="/hiveserver/serv.conf"
+HIVE_ROOT="/hiveserver/root"
+HIVE_FAKEROOT="/hiveserver/fakeroot"
+HIVE_BOOTDIR="/boot"
+
+[[ ! -f $SERVER_CONF ]] && echo "Error! serv.conf not found. Exit" && exit 1
+
+. $SERVER_CONF
+
+###Check Hive root dir and mount hive root FS
+if [[ ! -d $HIVE_ROOT ]];then
+	echo "Error! Hive rootFS dir not found. Exit."
+	exit 1
+fi	
+
+#cat /proc/mounts | grep -q $HIVE_ROOT
+#if [[ $? -ne 0 ]]; then
+#	echo "Error! Hive image not mount. Exit."
+#	exit 1
+#fi
+###
+
+cp -R $HIVE_ROOT/$HIVE_BOOTDIR $HIVE_FAKEROOT
+cp -R $HIVE_ROOT/etc/init.d $HIVE_FAKEROOT/etc
+rm -R $HIVE_FAKEROOT/etc/rcS.d
+cp -R $HIVE_ROOT/etc/rcS.d $HIVE_FAKEROOT/etc
+cp -R $HIVE_ROOT/etc/apt/apt.conf.d $HIVE_FAKEROOT/etc/apt/
+cp -R $HIVE_ROOT/hive/sbin $HIVE_FAKEROOT/hive
+cp $HIVE_ROOT/etc/hosts $HIVE_FAKEROOT/etc
+
+echo "$SERVER_IPADDR $SERVER_HOSTNAME" >> $HIVE_FAKEROOT/etc/hosts
+
+mount --bind $HIVE_FAKEROOT/etc/init.d $HIVE_ROOT/etc/init.d
+mount --bind $HIVE_FAKEROOT/etc/rcS.d $HIVE_ROOT/etc/rcS.d
+mount --bind /proc $HIVE_ROOT/proc
+mount --bind /sys $HIVE_ROOT/sys
+mount --bind /dev $HIVE_ROOT/dev
+mount --bind /boot/efi $HIVE_ROOT/$HIVE_BOOTDIR/efi
+
+if [[ -f $HIVE_ROOT/sbin/mount.nfs ]]; then
+	cat << EOF | chroot $HIVE_ROOT	
+systemctl disable apt-daily.timer
+systemctl disable apt-daily-upgrade.timer
+update-rc.d -f apparmor remove
+update-rc.d hive-preparefs.sh defaults
+EOF
+else
+	cat << EOF | chroot $HIVE_ROOT
+apt update
+apt install -y nfs-common
+systemctl disable apt-daily.timer
+systemctl disable apt-daily-upgrade.timer
+update-rc.d -f apparmor remove
+update-rc.d hive-preparefs.sh defaults
+EOF
+fi
+
+umount $HIVE_ROOT/dev
+umount $HIVE_ROOT/proc
+umount $HIVE_ROOT/sys
+umount $HIVE_ROOT/etc/init.d
+umount $HIVE_ROOT/etc/rcS.d
+umount $HIVE_FAKEROOT/$HIVE_BOOTDIR/efi
+
+exit 0
+
+
