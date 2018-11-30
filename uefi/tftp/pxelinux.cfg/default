@@ -1,5 +1,0 @@
-path bios
-include menu.cfg
-default bios/vesamenu.c32
-prompt 0
-timeout 10

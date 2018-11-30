@@ -14,10 +14,10 @@ HIVE_TFTP="/hiveserver/tftp"
 HIVE_RIGSFS="/hiveserver/rigsfs"
 HIVE_CONFDIR="/hiveserver/hive-config"
 DISTR_ZIP="master.zip"
-DISTR_URL="https://github.com/lexandr0s/test_diskless/archive/$DISTR_ZIP"
+DISTR_URL="https://github.com/dmitryvorobets/test_diskless/archive/$DISTR_ZIP"
 DISTR_DIR="test_diskless-master"
-HIVE_ZIP="hive-0.5-76-20180924.zip"
-HIVE_MD5="0848639740c8696f2df796623a270de4"
+HIVE_ZIP="hiveos-0.5-82-uefi.img.zip"
+HIVE_MD5="21a5e1569c044e551a4cb0f477f5bc8e"
 
 
 function install {
@@ -90,7 +90,7 @@ function config {
 
 function download {
 	rm -f $HIVE_IMAGE_DIR/*
-	wget -t 5 --show-progress http://download.hiveos.farm/$HIVE_ZIP
+	wget -t 5 --show-progress http://download.hiveos.farm/uefi/$HIVE_ZIP
 	[[ $? -ne 0 ]] && return 1
 	echo "$HIVE_MD5 $HIVE_ZIP" > md5.txt
 	echo "Check MD5 summ of image file"
@@ -192,17 +192,12 @@ echo "/hiveserver/rigsfs *(rw,sync,crossmnt,nohide,no_root_squash,no_subtree_che
 ##
 
 ###Create boot menu
-echo "menu hshift 13" > $HIVE_TFTP/menu.cfg
-echo "menu width 49" >> $HIVE_TFTP/menu.cfg
-echo "menu margin 8" >> $HIVE_TFTP/menu.cfg
-echo "menu tabmsg" >> $HIVE_TFTP/menu.cfg
-echo "" >> $HIVE_TFTP/menu.cfg
-echo "menu title HIVE OS" >> $HIVE_TFTP/menu.cfg
-echo "label HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
-echo "   menu label ^HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
-echo "   kernel vmlinuz" >> $HIVE_TFTP/menu.cfg
-echo "   append vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/root ro consoleblank=0 text intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$" >> $HIVE_TFTP/menu.cfg
-echo "menu end" >> $HIVE_TFTP/menu.cfg
+echo 'menuentry "Install Ubuntu" {' > $HIVE_TFTP/grub/grub.cfg
+echo "set gfxpayload=keep" >> $HIVE_TFTP/grub/grub.cfg
+echo "linux vmlinuz vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/root ro consoleblank=0 text intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$ gfxpayload=800x600x16,800x600 --- quit" >> $HIVE_TFTP/grub/grub.cfg
+echo "initrd initrd.img" >> $HIVE_TFTP/grub/grub.cfg
+echo "}" >> $HIVE_TFTP/grub/grub.cfg
+
 
 echo "#!/bin/bash" > /etc/rc.local
 echo "/hiveserver/sbin/start" >> /etc/rc.local
