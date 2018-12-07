@@ -122,9 +122,9 @@ if [[ ! -d /hiveserver/efi/sbin ]]; then
 	mkdir -p $HIVE_IMAGE_DIR
 	mkdir -p $HIVE_ROOT
 	mkdir -p $HIVE_RIGSFS
-	mkdir -p $HIVE_BOOTDIR
 	cp -R $DISTR_DIR/* /hiveserver/efi/
 fi
+[[ ! -d $HIVE_BOOTDIR ]] && mkdir -p $HIVE_BOOTDIR
 ##############
 
 clear
@@ -175,7 +175,7 @@ if [[ $want == "y" ]]; then
 	echo "dhcp-broadcast=$BROADCAST" >> /etc/dnsmasq.conf
 	echo "dhcp-option=option:dns-server,$DNS"  >> /etc/dnsmasq.conf
 	echo "dhcp-option=option:router,$ROUTER"  >> /etc/dnsmasq.conf
-	echo "dhcp-boot=/grubnetx64.efi.signed"  >> /etc/dnsmasq.conf
+	echo "dhcp-boot=/grubnetx64.efi"  >> /etc/dnsmasq.conf
 	echo "enable-tftp"  >> /etc/dnsmasq.conf
 	echo "tftp-root=$HIVE_TFTP"  >> /etc/dnsmasq.conf
 else
