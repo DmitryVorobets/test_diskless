@@ -89,19 +89,26 @@ function config {
 
 
 function download {
-	rm -f $HIVE_IMAGE_DIR/*
-	wget -t 5 --show-progress http://download.hiveos.farm/uefi/$HIVE_ZIP
-	[[ $? -ne 0 ]] && return 1
-	echo "$HIVE_MD5 $HIVE_ZIP" > md5.txt
-	echo "Check MD5 summ of image file"
-	md5sum --quiet -c md5.txt
-	[[ $? -ne 0 ]] && return 1
-	rm md5.txt
-	unzip $HIVE_ZIP
-	[[ $? -ne 0 ]] && return 1
-	mv hive*img $HIVE_IMAGE_DIR
-	rm $HIVE_ZIP
-	return 0
+	if [[ ! -f $HIVE_IMAGE_DIR/$HIVE_ZIP ]]; then
+#		rm -f $HIVE_IMAGE_DIR/*
+		wget -t 5 --show-progress http://download.hiveos.farm/uefi/$HIVE_ZIP
+		[[ $? -ne 0 ]] && return 1
+		echo "$HIVE_MD5 $HIVE_ZIP" > md5.txt
+		echo "Check MD5 summ of image file"
+		md5sum --quiet -c md5.txt
+		[[ $? -ne 0 ]] && return 1
+		rm md5.txt
+	fi
+	
+	HIVE_IMAGE=$( echo $HIVE_ZIP | awk -F '.zip' '{print $1}') && HIVE_IMAGE="${HIVE_IMAGE}.img"
+
+	if [[ ! -f $HIVE_IMAGE_DIR/$HIVE_IMAGE ]]; then
+		unzip $HIVE_ZIP
+		[[ $? -ne 0 ]] && return 1
+		mv hive*img $HIVE_IMAGE_DIR
+		rm $HIVE_ZIP
+		return 0
+    fi
 }
 
 function unify {
