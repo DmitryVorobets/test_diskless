@@ -5,7 +5,7 @@ HIVE_DIR="/hiveserver/efi/root"
 SERVER_CONF="/hiveserver/efi/serv.conf"
 HIVE_TFTP="/hiveserver/efi/tftp"
 HIVE_CONFDIR="/hiveserver/efi/hive-config"
-HIVE_BOOTDIR="$HIVE_DIR/boot/efi"
+HIVE_BOOTDIR="/hiveserver/efi/boot/efi"
 
 #Check image and mount it
 image_cnt=$(ls $HIVE_IMAGE_DIR/hive*.img -l | wc -l)

@@ -14,10 +14,10 @@ HIVE_RIGSFS="/hiveserver/efi/rigsfs"
 HIVE_CONFDIR="/hiveserver/efi/hive-config"
 DISTR_ZIP="master.zip"
 DISTR_URL="https://github.com/dmitryvorobets/test_diskless/archive/$DISTR_ZIP"
-DISTR_DIR="test_diskless-master/uefi"
+DISTR_DIR="test_diskless-master/efi"
 HIVE_ZIP="hiveos-0.5-82-uefi.img.zip"
 HIVE_MD5="21a5e1569c044e551a4cb0f477f5bc8e"
-HIVE_BOOTDIR="$HIVE_ROOT/boot/efi"
+HIVE_BOOTDIR="hiveserver/efi/boot/efi"
 
 
 function install {
@@ -122,6 +122,7 @@ if [[ ! -d /hiveserver/efi/sbin ]]; then
 	mkdir -p $HIVE_IMAGE_DIR
 	mkdir -p $HIVE_ROOT
 	mkdir -p $HIVE_RIGSFS
+	mkdir -p $HIVE_BOOTDIR
 	cp -R $DISTR_DIR/* /hiveserver/efi/
 fi
 ##############

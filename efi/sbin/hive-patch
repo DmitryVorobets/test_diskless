@@ -4,7 +4,7 @@
 SERVER_CONF="/hiveserver/efi/serv.conf"
 HIVE_ROOT="/hiveserver/efi/root"
 HIVE_FAKEROOT="/hiveserver/efi/fakeroot"
-HIVE_BOOTDIR="/hiveserver/efi/root/boot/efi"
+HIVE_BOOTDIR="/hiveserver/efi/boot/efi"
 
 [[ ! -f $SERVER_CONF ]] && echo "Error! serv.conf not found. Exit" && exit 1
 
@@ -23,6 +23,7 @@ fi
 #fi
 ###
 
+cp -R $HIVE_BOOTDIR $HIVE_FAKEROOT/boot/
 cp -R $HIVE_ROOT/etc/init.d $HIVE_FAKEROOT/etc
 rm -R $HIVE_FAKEROOT/etc/rcS.d
 cp -R $HIVE_ROOT/etc/rcS.d $HIVE_FAKEROOT/etc
@@ -37,7 +38,7 @@ mount --bind $HIVE_FAKEROOT/etc/rcS.d $HIVE_ROOT/etc/rcS.d
 mount --bind /proc $HIVE_ROOT/proc
 mount --bind /sys $HIVE_ROOT/sys
 mount --bind /dev $HIVE_ROOT/dev
-#mount --bind /boot/efi $HIVE_BOOTDIR
+mount --bind $HIVE_BOOTDIR $HIVE_ROOT/boot/efi
 
 if [[ -f $HIVE_ROOT/sbin/mount.nfs ]]; then
 	cat << EOF | chroot $HIVE_ROOT	
@@ -62,7 +63,7 @@ umount $HIVE_ROOT/proc
 umount $HIVE_ROOT/sys
 umount $HIVE_ROOT/etc/init.d
 umount $HIVE_ROOT/etc/rcS.d
-#umount $HIVE_BOOTDIR
+umount $HIVE_ROOT/boot/efi
 
 exit 0
 

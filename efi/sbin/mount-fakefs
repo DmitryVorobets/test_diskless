@@ -5,7 +5,7 @@ SERVER_CONF="/hiveserver/efi/serv.conf"
 HIVE_ROOT="/hiveserver/efi/root"
 HIVE_FAKEROOT="/hiveserver/efi/fakeroot"
 HIVE_CONFDIR="/hiveserver/efi/hive-config"
-HIVE_BOOTDIR="/hiveserver/efi/root/boot/efi"
+HIVE_BOOTDIR="/hiveserver/efi/boot/efi"
 
 case "$1" in
   mount)
@@ -22,6 +22,7 @@ case "$1" in
 	mount --bind $HIVE_FAKEROOT/hive/etc/hive-netpre.service $HIVE_ROOT/hive/etc/hive-netpre.service
 	mount --bind $HIVE_FAKEROOT/hive/etc/hive.service $HIVE_ROOT/hive/etc/hive.service
 	mount --bind $HIVE_CONFDIR $HIVE_ROOT/hive-config
+	mount --bind $HIVE_BOOTDIR $HIVE_ROOT/boot/efi
 	exit $?
 	;;
   umount)
@@ -38,6 +39,7 @@ case "$1" in
 	umount $HIVE_ROOT/hive/etc/hive-netpre.service
 	umount $HIVE_ROOT/hive/etc/hive.service
 	umount $HIVE_ROOT/hive-config
+	umount $HIVE_ROOT/boot/efi
 	exportfs -ra
 	exit $?
 	;;
