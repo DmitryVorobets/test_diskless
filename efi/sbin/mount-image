@@ -20,6 +20,7 @@ echo $HIVE_IMAGE
 
 
 [[ ! -d $HIVE_DIR ]] && echo "Create HIVE root directory" && mkdir $HIVE_DIR
+[[ ! -d $HIVE_BOOTDIR ]] && echo "Create HIVE boot directory" && mkdir $HIVE_BOOTDIR
 cat /proc/mounts | grep -q $HIVE_DIR
 if [[ $? -eq 0 ]]; then
 	echo "Hive root already mount. Skip."
@@ -29,8 +30,9 @@ else
 	hive_begin=$(parted $HIVE_IMAGE unit B print | grep ext4 | awk '{print $2}')
 	hive_begin=${hive_begin/B/}
 	mount -o loop,offset=$hive_begin $HIVE_IMAGE $HIVE_DIR/
-	mount -o loop,offset=$efi_begin $HIVE_IMAGE $HIVE_BOOTDIR/
 	[[ $? -ne 0 ]] && echo "Mount HIVE image failed" && exit 1
+	mount -o loop,offset=$efi_begin $HIVE_IMAGE $HIVE_BOOTDIR/
+	[[ $? -ne 0 ]] && echo "Mount HIVE bootdir failed" && exit 1
 fi
 
 
