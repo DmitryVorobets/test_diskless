@@ -22,7 +22,7 @@ echo2 "${YELLOW}Please, wait. This may take a few minutes.${NOCOLOR}"
 
 
 [[ ! -d /mnt/hiveramfs/rig ]] && mkdir -p /mnt/hiveramfs/rig
-mount -t nfs hiveserver.loc:/hiveserver/rigsfs /mnt/hiveramfs/rig
+mount -t nfs hiveserver.loc:/hiveserver/efi/rigsfs /mnt/hiveramfs/rig
 [[ $? -ne 0 ]] && echo2 "${RED}Error mount NFS share. Contact HIVE server admin${NOCOLOR}"
 
 #Create nfs rig dirs and mount them
@@ -48,11 +48,16 @@ if [[ ! -d $rig_virtdir/hive ]]; then
 	cp -R /hive $rig_virtdir/hive
 fi
 
+if [[ ! -d $rig_virtdir/boot/efi ]]; then
+	cp -R /boot/efi $rig_virtdir/boot/efi
+fi
+
 killall screen #Kill background hive processes to prevent unexpected effects
 mount --bind $rig_virtdir/hive-config /hive-config
 mount --bind $rig_virtdir/home/user /home/user
 chown -R user:user /home/user $rig_virtdir/home
 mount --bind $rig_virtdir/root /root
+mount --bind $rig_virtdir/boot/efi /boot/efi
 mount --bind $rig_virtdir/hive /hive
 echo "exit 0 #Diskless rig. Upgrade not allowed" > /hive/bin/selfupgrade
 
@@ -61,5 +66,3 @@ echo2 "${GREEN}Preparation completed successfully.${NOCOLOR}"
 echo2 "${GREEN}Starting HIVE OS${NOCOLOR}"
 
 exec /hive/bin/hive
-
-

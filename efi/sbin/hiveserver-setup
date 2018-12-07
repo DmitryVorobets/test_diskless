@@ -1,0 +1,221 @@
+#!/bin/bash
+#Setup Hive server
+echo "Installation the Hive OS server"
+echo
+[[ $(id -u) -ne 0 ]] && echo "Please run this as root or with sudo. Exit" && exit 1 ##Check root privilegies
+
+SERVER_CONF="/hiveserver/efi/serv.conf"
+HIVE_IMAGE_DIR="/hiveserver/efi/image"
+HIVE_ROOT="/hiveserver/efi/root"
+HIVE_FAKEROOT="/hiveserver/efi/fakeroot"
+HIVE_SBIN="/hiveserver/efi/sbin"
+HIVE_TFTP="/hiveserver/efi/tftp"
+HIVE_RIGSFS="/hiveserver/efi/rigsfs"
+HIVE_CONFDIR="/hiveserver/efi/hive-config"
+DISTR_ZIP="master.zip"
+DISTR_URL="https://github.com/dmitryvorobets/test_diskless/archive/$DISTR_ZIP"
+DISTR_DIR="test_diskless-master/uefi"
+HIVE_ZIP="hiveos-0.5-82-uefi.img.zip"
+HIVE_MD5="21a5e1569c044e551a4cb0f477f5bc8e"
+HIVE_BOOTDIR="$HIVE_ROOT/boot/efi"
+
+
+function install {
+	apt update
+	[[ $? -ne 0 ]] && return 1
+	apt -y dist-upgrade
+	[[ $? -ne 0 ]] && return 1
+	apt -y autoclean
+	[[ $? -ne 0 ]] && return 1
+	apt install -y nfs-kernel-server dnsmasq unzip curl dos2unix
+	[[ $? -ne 0 ]] && return 1
+	return 0
+}
+
+function config {
+	while [[ $answ != "yes" ]]
+	do
+		clear
+		echo -en "Type the server IP-address (example: 192.168.1.1): "
+		read ipaddr
+		echo
+		echo -en "Type the subnet net-mask (example: 255.255.255.0): "
+		read mask
+		echo
+		echo -en "Type the gateway IP-address (example: 192.168.1.100): "
+		read gtw
+		echo
+		echo -en "Type the Broadcast address (example: 192.168.1.255): "
+		read brc
+		echo
+		echo -en "Type the DNS-server address (example: 1.1.1.1): "
+		read dns
+		echo
+		echo -en "Type the DHCP-range for you subnet (example: 192.168.1.10,192.168.1.50, or empty for no-DHCP): "
+		read range
+		echo
+		echo -en "Type you Farm Hash (from web): "
+		read hash
+		clear
+		echo "Carefully check your network settings."
+		echo "If these values are incorrect, your server will not work correctly."
+		echo "And your rigs will not be able to boot."
+		echo
+		echo "Server IP-address: $ipaddr"
+		echo "Subnet net-mask: $mask"
+		echo "Broadcast address: $brc"
+		echo "Gateway IP-address: $gtw"
+		echo "DNS-server IP-address: $dns"
+		echo "DHCP-range for you subnet: $range"
+		echo "Farm Hash: $hash"
+		echo 
+		echo -e "Type \"yes\" if all correct or any for setup values again"
+		echo -en "All values correct? :"
+		read answ
+		[[ $answ != "yes" ]] && continue
+
+		#Create server config
+		echo "SERVER_IPADDR=$ipaddr" > $SERVER_CONF
+		echo "SERVER_HOSTNAME=\"hiveserver.loc\"" >> $SERVER_CONF
+		echo "NETMASK=$mask" >> $SERVER_CONF
+		echo "ROUTER=$gtw" >> $SERVER_CONF
+		echo "BROADCAST=$brc" >> $SERVER_CONF
+		echo "DNS=$dns" >> $SERVER_CONF
+		echo "DHCP_RANGE=$range" >> $SERVER_CONF
+		echo "FARM_HASH=$hash" >> $SERVER_CONF
+	done
+	return 0
+}
+
+
+function download {
+	rm -f $HIVE_IMAGE_DIR/*
+	wget -t 5 --show-progress http://download.hiveos.farm/uefi/$HIVE_ZIP
+	[[ $? -ne 0 ]] && return 1
+	echo "$HIVE_MD5 $HIVE_ZIP" > md5.txt
+	echo "Check MD5 summ of image file"
+	md5sum --quiet -c md5.txt
+	[[ $? -ne 0 ]] && return 1
+	rm md5.txt
+	unzip $HIVE_ZIP
+	[[ $? -ne 0 ]] && return 1
+	mv hive*img $HIVE_IMAGE_DIR
+	rm $HIVE_ZIP
+	return 0
+}
+
+function unify {
+	#Unify the answer
+	u=$1
+	u=${u,}
+	u=${u:0:1}
+	echo $u
+}
+
+
+##Download and install server components
+install
+if [[ ! -d /hiveserver/efi/sbin ]]; then
+	wget -t 5 --show-progress $DISTR_URL
+	[[ $? -ne 0 ]] && exit 1
+	unzip $DISTR_ZIP
+	mkdir -p $HIVE_IMAGE_DIR
+	mkdir -p $HIVE_ROOT
+	mkdir -p $HIVE_RIGSFS
+	cp -R $DISTR_DIR/* /hiveserver/efi/
+fi
+##############
+
+clear
+want="y"
+echo -en "Do you want create server config? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=$(unify $want)
+fi
+if [[ $want == "y" ]]; then
+	config
+	echo "Create Server config success"
+fi
+
+want=""
+echo -en  "Do you want download and install Hive OS image? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=$(unify $want)
+fi
+if [[ $want == "y" ]]; then
+	download
+	[[ $? -ne 0 ]] && echo "Error install Hive OS image. Exit" && exit 1
+	echo "Download and install Hive OS image success."
+fi
+
+
+[[ ! -f $SERVER_CONF ]] && echo "Error! $SERVER_CONF not found. Exit" && exit 1
+source $SERVER_CONF
+
+
+#Configure dnsmasq and NFS-server
+want=""
+echo -en  "Do you want to use this server as DHCP-server? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=$(unify $want)
+fi
+if [[ $want == "y" ]]; then
+	echo "port=0" > /etc/dnsmasq.conf
+	echo "dhcp-range=$DHCP_RANGE,$NETMASK" >> /etc/dnsmasq.conf
+	echo "dhcp-broadcast=$BROADCAST" >> /etc/dnsmasq.conf
+	echo "dhcp-option=option:dns-server,$DNS"  >> /etc/dnsmasq.conf
+	echo "dhcp-option=option:router,$ROUTER"  >> /etc/dnsmasq.conf
+	echo "dhcp-boot=/grubnetx64.efi.signed"  >> /etc/dnsmasq.conf
+	echo "enable-tftp"  >> /etc/dnsmasq.conf
+	echo "tftp-root=$HIVE_TFTP"  >> /etc/dnsmasq.conf
+else
+	echo "port=0" > /etc/dnsmasq.conf
+	echo "enable-tftp"  >> /etc/dnsmasq.conf
+	echo "tftp-root=$HIVE_TFTP"  >> /etc/dnsmasq.conf
+fi
+
+echo "DNSMASQ_EXCEPT=lo" >> /etc/default/dnsmasq
+
+###########
+##Export nfs shares
+echo "/hiveserver/efi/root *(ro,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" > /etc/exports
+echo "/hiveserver/efi/rigsfs *(rw,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" >> /etc/exports
+##
+
+###Create boot menu
+echo 'menuentry "Hiveos Diskless" {' > $HIVE_TFTP/grub/grub.cfg
+echo "set gfxpayload=keep" >> $HIVE_TFTP/grub/grub.cfg
+echo "linux vmlinuz vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/efi/root ro consoleblank=0 text intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$ gfxpayload=800x600x16,800x600 --- quit" >> $HIVE_TFTP/grub/grub.cfg
+echo "initrd initrd.img" >> $HIVE_TFTP/grub/grub.cfg
+echo "}" >> $HIVE_TFTP/grub/grub.cfg
+
+
+echo "#!/bin/bash" > /etc/rc.local
+echo "/hiveserver/efi/sbin/start" >> /etc/rc.local
+echo "exit 0" >> /etc/rc.local
+
+echo
+echo "Congratulations! All the installation steps are completed successfully."
+echo "We recommend reboot you server for correct apply installation"
+echo "After rebooting, your server will be ready to work."
+echo "And you can boot your diskless rigs."
+want=""
+echo -en  "Do you want reboot you server now? (Y/n)"
+read want
+if [[ -z $want ]]; then
+	want="y"
+else
+	want=$(unify $want)
+fi
+[[ $want == "y" ]] && reboot
+
+exit 0

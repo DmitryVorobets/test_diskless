@@ -1,0 +1,66 @@
+#!/bin/bash
+
+HIVE_IMAGE_DIR="/hiveserver/efi/image"
+HIVE_DIR="/hiveserver/efi/root"
+SERVER_CONF="/hiveserver/efi/serv.conf"
+HIVE_TFTP="/hiveserver/efi/tftp"
+HIVE_CONFDIR="/hiveserver/efi/hive-config"
+HIVE_BOOTDIR="$HIVE_DIR/boot/efi"
+
+#Check image and mount it
+image_cnt=$(ls $HIVE_IMAGE_DIR/hive*.img -l | wc -l)
+
+if [[ $image_cnt -ne 1 ]]; then
+	echo "Error! Image file not found or more than one image file found in $HIVE_IMAGE_DIR"
+	exit 1
+fi
+
+HIVE_IMAGE=$(ls $HIVE_IMAGE_DIR/hive*.img)
+echo $HIVE_IMAGE
+
+
+[[ ! -d $HIVE_DIR ]] && echo "Create HIVE root directory" && mkdir $HIVE_DIR
+cat /proc/mounts | grep -q $HIVE_DIR
+if [[ $? -eq 0 ]]; then
+	echo "Hive root already mount. Skip."
+else
+	efi_begin=$(parted $HIVE_IMAGE unit B print | grep EFI | awk '{print $2}')
+	efi_begin=${efi_begin/B/}
+	hive_begin=$(parted $HIVE_IMAGE unit B print | grep ext4 | awk '{print $2}')
+	hive_begin=${hive_begin/B/}
+	mount -o loop,offset=$hive_begin $HIVE_IMAGE $HIVE_DIR/
+	mount -o loop,offset=$efi_begin $HIVE_IMAGE $HIVE_BOOTDIR/
+	[[ $? -ne 0 ]] && echo "Mount HIVE image failed" && exit 1
+fi
+
+
+## Check conf dir and copy it from image if config not found
+[[ ! -d $HIVE_CONFDIR ]] && echo "Create hive-conf directory" && mkdir $HIVE_CONFDIR
+if [[ -f $HIVE_CONFDIR/rig.conf ]]; then
+	echo "$HIVE_CONFDIR/rig.conf found"
+else
+	cp -R $HIVE_DIR/hive/etc/hive-config.stub/* $HIVE_CONFDIR/
+fi
+
+[[ ! -f $HIVE_CONFDIR/rig.conf ]] && cp $HIVE_CONFDIR/rig-config-example.txt $HIVE_CONFDIR/rig.conf
+
+dos2unix $HIVE_CONFDIR/rig.conf 
+source $HIVE_CONFDIR/rig.conf
+
+if [[ -z $FARM_HASH ]]; then
+	[[ ! -f $SERVER_CONF ]] && echo "$SERVER_CONF not found. Exit" && exit 1
+	source $SERVER_CONF
+	echo "FARM_HASH=$FARM_HASH" >> $HIVE_CONFDIR/rig.conf
+fi
+
+if [[ ! -f $HIVE_TFTP/vmlinuz ]]; then
+	found_kernel=$(ls $HIVE_DIR/boot/vmlinuz*hiveos)
+	cp $found_kernel $HIVE_TFTP/vmlinuz
+	chmod 744 $HIVE_TFTP/vmlinuz
+	found_init=$(ls $HIVE_DIR/boot/initrd*hiveos)
+	cp $found_init $HIVE_TFTP/initrd.img
+	chmod 744 $HIVE_TFTP/initrd.img
+fi
+
+echo "Mount HIVE OS image successfull"
+exit 0
