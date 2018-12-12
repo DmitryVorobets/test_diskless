@@ -1,12 +1,12 @@
 #!/bin/bash
 
-/hiveserver/sbin/mount-image
+/hiveserver/bios/sbin/mount-image
 [[ $? -ne 0 ]] && exit 1
 
-/hiveserver/sbin/hive-patch
+/hiveserver/bios/sbin/hive-patch
 [[ $? -ne 0 ]] && exit 1
 
-/hiveserver/sbin/mount-fakefs mount
+/hiveserver/bios/sbin/mount-fakefs mount
 [[ $? -ne 0 ]] && exit 1
 
 exit 0

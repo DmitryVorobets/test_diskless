@@ -1,10 +1,10 @@
 #!/bin/bash
 #Mount points to fakefs
 
-SERVER_CONF="/hiveserver/serv.conf"
-HIVE_ROOT="/hiveserver/root"
-HIVE_FAKEROOT="/hiveserver/fakeroot"
-HIVE_CONFDIR="/hiveserver/hive-config"
+SERVER_CONF="/hiveserver/bios/serv.conf"
+HIVE_ROOT="/hiveserver/bios/root"
+HIVE_FAKEROOT="/hiveserver/bios/fakeroot"
+HIVE_CONFDIR="/hiveserver/bios/hive-config"
 
 case "$1" in
   mount)
@@ -24,7 +24,7 @@ case "$1" in
 	exit $?
 	;;
   umount)
-	exportfs -u *:/hiveserver/root
+	exportfs -u *:/hiveserver/bios/root
 	umount $HIVE_ROOT/etc/init.d
 	umount $HIVE_ROOT/etc/rcS.d
 	umount $HIVE_ROOT/etc/fstab

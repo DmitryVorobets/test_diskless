@@ -1,10 +1,10 @@
 #!/bin/bash
 
-HIVE_IMAGE_DIR="/hiveserver/image"
-HIVE_DIR="/hiveserver/root"
-SERVER_CONF="/hiveserver/serv.conf"
-HIVE_TFTP="/hiveserver/tftp"
-HIVE_CONFDIR="/hiveserver/hive-config"
+HIVE_IMAGE_DIR="/hiveserver/bios/image"
+HIVE_DIR="/hiveserver/bios/root"
+SERVER_CONF="/hiveserver/bios/serv.conf"
+HIVE_TFTP="/hiveserver/bios/tftp"
+HIVE_CONFDIR="/hiveserver/bios/hive-config"
 
 #Check image and mount it
 image_cnt=$(ls $HIVE_IMAGE_DIR/hive*.img -l | wc -l)

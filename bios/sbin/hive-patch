@@ -1,9 +1,9 @@
 #!/bin/bash
 #Create init.rd provider for prepare Hive FS
 
-SERVER_CONF="/hiveserver/serv.conf"
-HIVE_ROOT="/hiveserver/root"
-HIVE_FAKEROOT="/hiveserver/fakeroot"
+SERVER_CONF="/hiveserver/bios/serv.conf"
+HIVE_ROOT="/hiveserver/bios/root"
+HIVE_FAKEROOT="/hiveserver/bios/fakeroot"
 
 [[ ! -f $SERVER_CONF ]] && echo "Error! serv.conf not found. Exit" && exit 1
 

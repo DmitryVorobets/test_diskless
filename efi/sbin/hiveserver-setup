@@ -100,9 +100,9 @@ function download {
 		rm md5.txt
 	fi
 
-	HIVE_IMAGE=$( echo $HIVE_ZIP | awk -F '.zip' '{print $1}') && HIVE_IMAGE="${HIVE_IMAGE}.img"
+	HIVE_IMAGE=$(ls $HIVE_IMAGE_DIR/hive*.img)
 
-	if [[ ! -f $HIVE_IMAGE_DIR/$HIVE_IMAGE ]]; then
+	if [[ ! -f $HIVE_IMAGE ]]; then
 		unzip $HIVE_ZIP
 		[[ $? -ne 0 ]] && return 1
 		mv hive*img $HIVE_IMAGE_DIR

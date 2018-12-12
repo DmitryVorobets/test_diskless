@@ -4,17 +4,17 @@ echo "Installation the Hive OS server"
 echo
 [[ $(id -u) -ne 0 ]] && echo "Please run this as root or with sudo. Exit" && exit 1 ##Check root privilegies
 
-SERVER_CONF="/hiveserver/serv.conf"
-HIVE_IMAGE_DIR="/hiveserver/image"
-HIVE_ROOT="/hiveserver/root"
-HIVE_FAKEROOT="/hiveserver/fakeroot"
-HIVE_SBIN="/hiveserver/sbin"
-HIVE_TFTP="/hiveserver/tftp"
-HIVE_RIGSFS="/hiveserver/rigsfs"
-HIVE_CONFDIR="/hiveserver/hive-config"
+SERVER_CONF="/hiveserver/bios/serv.conf"
+HIVE_IMAGE_DIR="/hiveserver/bios/image"
+HIVE_ROOT="/hiveserver/bios/root"
+HIVE_FAKEROOT="/hiveserver/bios/fakeroot"
+HIVE_SBIN="/hiveserver/bios/sbin"
+HIVE_TFTP="/hiveserver/bios/tftp"
+HIVE_RIGSFS="/hiveserver/bios/rigsfs"
+HIVE_CONFDIR="/hiveserver/bios/hive-config"
 DISTR_ZIP="master.zip"
-DISTR_URL="https://github.com/lexandr0s/test_diskless/archive/$DISTR_ZIP"
-DISTR_DIR="test_diskless-master"
+DISTR_URL="https://github.com/dmitryvorobets/test_diskless/archive/$DISTR_ZIP"
+DISTR_DIR="test_diskless-master/bios"
 HIVE_ZIP="hive-0.5-76-20180924.zip"
 HIVE_MD5="0848639740c8696f2df796623a270de4"
 
@@ -114,14 +114,14 @@ function unify {
 
 ##Download and install server components
 install
-if [[ ! -d /hiveserver/sbin ]]; then
+if [[ ! -d /hiveserver/bios/sbin ]]; then
 	wget -t 5 --show-progress $DISTR_URL
 	[[ $? -ne 0 ]] && exit 1
 	unzip $DISTR_ZIP
 	mkdir -p $HIVE_IMAGE_DIR
 	mkdir -p $HIVE_ROOT
 	mkdir -p $HIVE_RIGSFS
-	cp -R $DISTR_DIR/* /hiveserver/
+	cp -R $DISTR_DIR/* /hiveserver/bios/
 fi
 ##############
 
@@ -186,8 +186,8 @@ echo "DNSMASQ_EXCEPT=lo" >> /etc/default/dnsmasq
 
 ###########
 ##Export nfs shares
-echo "/hiveserver/root *(ro,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" > /etc/exports
-echo "/hiveserver/rigsfs *(rw,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" >> /etc/exports
+echo "/hiveserver/bios/root *(ro,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" > /etc/exports
+echo "/hiveserver/bios/rigsfs *(rw,sync,crossmnt,nohide,no_root_squash,no_subtree_check)" >> /etc/exports
 ##
 
 ###Create boot menu
@@ -200,11 +200,11 @@ echo "menu title HIVE OS" >> $HIVE_TFTP/menu.cfg
 echo "label HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
 echo "   menu label ^HIVE OS diskless rig" >> $HIVE_TFTP/menu.cfg
 echo "   kernel vmlinuz" >> $HIVE_TFTP/menu.cfg
-echo "   append vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/root ro consoleblank=0 text intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$" >> $HIVE_TFTP/menu.cfg
+echo "   append vga=788 initrd=initrd.img ip=dhcp root=/dev/nfs  netboot=nfs nfsroot=$SERVER_IPADDR:/hiveserver/bios/root ro consoleblank=0 text intel_pstate=disable net.ifnames=0 ipv6.disable=1 pci=noaer iommu=soft amdgpu.vm_fragment_size=9 rade$" >> $HIVE_TFTP/menu.cfg
 echo "menu end" >> $HIVE_TFTP/menu.cfg
 
 echo "#!/bin/bash" > /etc/rc.local
-echo "/hiveserver/sbin/start" >> /etc/rc.local
+echo "/hiveserver/bios/sbin/start" >> /etc/rc.local
 echo "exit 0" >> /etc/rc.local
 
 echo

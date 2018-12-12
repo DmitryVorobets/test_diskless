@@ -23,7 +23,7 @@ fi
 #fi
 ###
 
-cp -R $HIVE_BOOTDIR $HIVE_FAKEROOT/boot/
+cp -R $HIVE_BOOTDIR $HIVE_FAKEROOT/boot/efi
 cp -R $HIVE_ROOT/etc/init.d $HIVE_FAKEROOT/etc
 rm -R $HIVE_FAKEROOT/etc/rcS.d
 cp -R $HIVE_ROOT/etc/rcS.d $HIVE_FAKEROOT/etc
