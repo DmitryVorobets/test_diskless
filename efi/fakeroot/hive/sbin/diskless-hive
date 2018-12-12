@@ -6,7 +6,7 @@ cat /proc/mounts | grep -q hiveserver
 [[ $? -ne 0 ]] && exec /hive/bin/hive
 
 export PATH
-
+export HIVE_RIGSFS="/hiveserver/efi/rigsfs"
 #[ -t 1 ] &&
 . colors #use them anyway
 
@@ -22,7 +22,7 @@ echo2 "${YELLOW}Please, wait. This may take a few minutes.${NOCOLOR}"
 
 
 [[ ! -d /mnt/hiveramfs/rig ]] && mkdir -p /mnt/hiveramfs/rig
-mount -t nfs 192.168.0.99:/hiveserver/efi/rigsfs /mnt/hiveramfs/rig
+mount -t hiveserver.locl:$HIVE_RIGSFS /mnt/hiveramfs/rig
 [[ $? -ne 0 ]] && echo2 "${RED}Error mount NFS share. Contact HIVE server admin${NOCOLOR}"
 
 #Create nfs rig dirs and mount them
