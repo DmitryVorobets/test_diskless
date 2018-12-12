@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #Prepare FS for diskless rig
 source /etc/environment
-
+export HIVE_RIGSFS="/hiveserver/bios/rigsfs"
 cat /proc/mounts | grep -q hiveserver
 [[ $? -ne 0 ]] && exec /hive/bin/hive
 
@@ -22,7 +22,7 @@ echo2 "${YELLOW}Please, wait. This may take a few minutes.${NOCOLOR}"
 
 
 [[ ! -d /mnt/hiveramfs/rig ]] && mkdir -p /mnt/hiveramfs/rig
-mount -t nfs hiveserver.loc:/hiveserver/rigsfs /mnt/hiveramfs/rig
+mount -t nfs hiveserver.loc:$HIVE_RIGSFS /mnt/hiveramfs/rig
 [[ $? -ne 0 ]] && echo2 "${RED}Error mount NFS share. Contact HIVE server admin${NOCOLOR}"
 
 #Create nfs rig dirs and mount them
